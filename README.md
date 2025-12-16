@@ -258,5 +258,7 @@ Este es un proyecto personal con fines educativos y de gestión de colección. P
 Proyecto de uso personal. El código está disponible para referencia y aprendizaje.
 
 ---
+APK Disponible para su uso:
+https://expo.dev/artifacts/eas/evfeQA7LzsPn8p3S3Ntjv2.apk
 
 Desarrollado para ayudar a coleccionistas de cartas Pokémon a gestionar su colección de forma sencilla y visual.
