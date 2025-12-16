@@ -1,0 +1,661 @@
+const BASE_URL = 'https://pokeapi.co/api/v2';
+
+// Traducciones de tipos de español
+const TYPE_TRANSLATIONS = {
+  normal: 'Normal',
+  fighting: 'Lucha',
+  flying: 'Volador',
+  poison: 'Veneno',
+  ground: 'Tierra',
+  rock: 'Roca',
+  bug: 'Bicho',
+  ghost: 'Fantasma',
+  steel: 'Acero',
+  fire: 'Fuego',
+  water: 'Agua',
+  grass: 'Planta',
+  electric: 'Eléctrico',
+  psychic: 'Psíquico',
+  ice: 'Hielo',
+  dragon: 'Dragón',
+  dark: 'Siniestro',
+  fairy: 'Hada'
+};
+
+// Colores por tipo
+const TYPE_COLORS = {
+  normal: '#A8A878',
+  fighting: '#C03028',
+  flying: '#A890F0',
+  poison: '#A040A0',
+  ground: '#E0C068',
+  rock: '#B8A038',
+  bug: '#A8B820',
+  ghost: '#705898',
+  steel: '#B8B8D0',
+  fire: '#F08030',
+  water: '#6890F0',
+  grass: '#78C850',
+  electric: '#F8D030',
+  psychic: '#F85888',
+  ice: '#98D8D8',
+  dragon: '#7038F8',
+  dark: '#705848',
+  fairy: '#EE99AC'
+};
+
+const GENUS_FALLBACK_ES = {
+  'Seed Pokémon': 'Pokémon Semilla',
+  'Lizard Pokémon': 'Pokémon Lagartija',
+  'Flame Pokémon': 'Pokémon Llama',
+  'Tiny Turtle Pokémon': 'Pokémon Tortuguita',
+  'Mouse Pokémon': 'Pokémon Ratón',
+  'Dragon Pokémon': 'Pokémon Dragón',
+  'Legendary Pokémon': 'Pokémon Legendario',
+  'Mythical Pokémon': 'Pokémon Mítico',
+};
+
+class PokeAPI {
+  constructor() {
+    this.translationCache = {};
+  }
+
+  cleanText(text) {
+    if (!text) return '';
+    // Decodificar caracteres especiales
+    return text
+      .replace(/\n/g, ' ')
+      .replace(/\f/g, ' ')
+      .trim();
+  }
+
+  translateToSpanish(text) {
+    if (!text) return '';
+
+    // Diccionario de traducciones comunes de Pokémon
+    const translations = {
+      // Categorías comunes
+      'Mouse Pokémon': 'Pokémon Ratón',
+      'Lizard Pokémon': 'Pokémon Lagartija',
+      'Flame Pokémon': 'Pokémon Llama',
+      'Tiny Turtle Pokémon': 'Pokémon Tortuguita',
+      'Turtle Pokémon': 'Pokémon Tortuga',
+      'Shellfish Pokémon': 'Pokémon Marisco',
+      'Worm Pokémon': 'Pokémon Gusano',
+      'Cocoon Pokémon': 'Pokémon Capullo',
+      'Butterfly Pokémon': 'Pokémon Mariposa',
+      'Hairy Bug Pokémon': 'Pokémon Oruga',
+      'Poison Bee Pokémon': 'Pokémon Abeja Venenosa',
+      'Tiny Bird Pokémon': 'Pokémon Pajarito',
+      'Bird Pokémon': 'Pokémon Pájaro',
+      'Snake Pokémon': 'Pokémon Serpiente',
+      'Cobra Pokémon': 'Pokémon Cobra',
+      'Poison Pin Pokémon': 'Pokémon Pin Veneno',
+      'Drill Pokémon': 'Pokémon Taladro',
+      'Fairy Pokémon': 'Pokémon Hada',
+      'Fox Pokémon': 'Pokémon Zorro',
+      'Balloon Pokémon': 'Pokémon Globo',
+      'Bat Pokémon': 'Pokémon Murciélago',
+      'Weed Pokémon': 'Pokémon Hierbajo',
+      'Flower Pokémon': 'Pokémon Flor',
+      'Mushroom Pokémon': 'Pokémon Hongo',
+      'Insect Pokémon': 'Pokémon Insecto',
+      'Poison Moth Pokémon': 'Pokémon Polilla Venenosa',
+      'Mole Pokémon': 'Pokémon Topo',
+      'Scratch Cat Pokémon': 'Pokémon Gato Araña',
+      'Classy Cat Pokémon': 'Pokémon Gato Elegante',
+      'Duck Pokémon': 'Pokémon Pato',
+      'Pig Pokémon': 'Pokémon Cerdo',
+      'Pig Monkey Pokémon': 'Pokémon Cerdo Mono',
+      'Puppy Pokémon': 'Pokémon Cachorro',
+      'Legendary Pokémon': 'Pokémon Legendario',
+      'Tadpole Pokémon': 'Pokémon Renacuajo',
+      'Psi Pokémon': 'Pokémon Psi',
+      'Superpower Pokémon': 'Pokémon Superpoder',
+      'Flycatcher Pokémon': 'Pokémon Atrapamoscas',
+      'Jellyfish Pokémon': 'Pokémon Medusa',
+      'Rock Pokémon': 'Pokémon Roca',
+      'Megaton Pokémon': 'Pokémon Megatón',
+      'Fire Horse Pokémon': 'Pokémon Caballo de Fuego',
+      'Dopey Pokémon': 'Pokémon Atontado',
+      'Hermit Crab Pokémon': 'Pokémon Cangrejo Ermitaño',
+      'Magnet Pokémon': 'Pokémon Imán',
+      'Wild Duck Pokémon': 'Pokémon Pato Salvaje',
+      'Twin Bird Pokémon': 'Pokémon Pájaro Doble',
+      'Sea Lion Pokémon': 'Pokémon León Marino',
+      'Sludge Pokémon': 'Pokémon Lodo',
+      'Bivalve Pokémon': 'Pokémon Bivalvo',
+      'Gas Pokémon': 'Pokémon Gas',
+      'Shadow Pokémon': 'Pokémon Sombra',
+      'Rock Snake Pokémon': 'Pokémon Serpiente Roca',
+      'Hypnosis Pokémon': 'Pokémon Hipnosis',
+      'River Crab Pokémon': 'Pokémon Cangrejo de Río',
+      'Pincer Pokémon': 'Pokémon Pinza',
+      'Ball Pokémon': 'Pokémon Bola',
+      'Egg Pokémon': 'Pokémon Huevo',
+      'Coconut Pokémon': 'Pokémon Coco',
+      'Lonely Pokémon': 'Pokémon Solitario',
+      'Bone Keeper Pokémon': 'Pokémon Guardahuesos',
+      'Kicking Pokémon': 'Pokémon Patada',
+      'Punching Pokémon': 'Pokémon Puñetazo',
+      'Licking Pokémon': 'Pokémon Lengua',
+      'Poison Gas Pokémon': 'Pokémon Gas Venenoso',
+      'Spikes Pokémon': 'Pokémon Pincho',
+      'Vine Pokémon': 'Pokémon Enredadera',
+      'Parent Pokémon': 'Pokémon Padre',
+      'Dragon Pokémon': 'Pokémon Dragón',
+      'Goldfish Pokémon': 'Pokémon Pez Dorado',
+      'Starshape Pokémon': 'Pokémon Estrella',
+      'Mysterious Pokémon': 'Pokémon Misterioso',
+      'Barrier Pokémon': 'Pokémon Barrera',
+      'Mantis Pokémon': 'Pokémon Mantis',
+      'Humanshape Pokémon': 'Pokémon Humanoide',
+      'Electric Pokémon': 'Pokémon Eléctrico',
+      'Spitfire Pokémon': 'Pokémon Escupefuego',
+      'Stag Beetle Pokémon': 'Pokémon Ciervo Volante',
+      'Wild Bull Pokémon': 'Pokémon Toro Salvaje',
+      'Fish Pokémon': 'Pokémon Pez',
+      'Atrocious Pokémon': 'Pokémon Atroz',
+      'Transport Pokémon': 'Pokémon Transporte',
+      'Transform Pokémon': 'Pokémon Transformación',
+      'Evolution Pokémon': 'Pokémon Evolución',
+      'Bubble Jet Pokémon': 'Pokémon Burbuja',
+      'Lightning Pokémon': 'Pokémon Relámpago',
+      'Virtual Pokémon': 'Pokémon Virtual',
+      'Spiral Pokémon': 'Pokémon Espiral',
+      'Fossil Pokémon': 'Pokémon Fósil',
+      'Sleeping Pokémon': 'Pokémon Dormir',
+      'Freeze Pokémon': 'Pokémon Congelado',
+      'Genetic Pokémon': 'Pokémon Genético',
+      'New Species Pokémon': 'Pokémon Nueva Especie',
+
+      // Para generaciones nuevas, traducciones básicas
+      'Storm Petrel Pokémon': 'Pokémon Paíño',
+      'Stormy Petrel Pokémon': 'Pokémon Paíño',
+      'Frigatebird Pokémon': 'Pokémon Fragata',
+
+      // Palabras clave para traducción automática básica
+      'Pokémon': 'Pokémon',
+    };
+
+    // Buscar traducción exacta
+    if (translations[text]) {
+      return translations[text];
+    }
+
+    // Traducir palabras comunes
+    const wordTranslations = {
+      'Mouse': 'Ratón',
+      'Cat': 'Gato',
+      'Dog': 'Perro',
+      'Bird': 'Pájaro',
+      'Fish': 'Pez',
+      'Dragon': 'Dragón',
+      'Snake': 'Serpiente',
+      'Bug': 'Bicho',
+      'Tiny': 'Pequeño',
+      'Fire': 'Fuego',
+      'Water': 'Agua',
+      'Electric': 'Eléctrico',
+      'Grass': 'Planta',
+      'Rock': 'Roca',
+      'Ground': 'Tierra',
+      'Ice': 'Hielo',
+      'Fighting': 'Lucha',
+      'Poison': 'Veneno',
+      'Flying': 'Volador',
+      'Psychic': 'Psíquico',
+      'Dark': 'Siniestro',
+      'Steel': 'Acero',
+      'Fairy': 'Hada',
+      'Normal': 'Normal',
+      'Ghost': 'Fantasma',
+      'Legendary': 'Legendario',
+      'Mythical': 'Mítico',
+    };
+
+    // Si no está en el diccionario, hacer traducción básica de palabras clave
+    let translated = text;
+
+    if (!text.includes('Pokémon')) {
+      Object.keys(wordTranslations).forEach(eng => {
+        const regex = new RegExp(eng, 'gi');
+        translated = translated.replace(regex, wordTranslations[eng]);
+      });
+    }
+
+    return translated;
+  }
+
+  async translateText(text, fromLang = 'auto', toLang = 'es') {
+    if (!text) return '';
+
+    // Revisar caché primero
+    const cacheKey = `${fromLang}-${toLang}-${text}`;
+    if (this.translationCache[cacheKey]) {
+      return this.translationCache[cacheKey];
+    }
+
+    try {
+      // API de Google Translate directo (sin paquete)
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const translated = data[0][0][0] || text;
+
+      // Guardar en caché
+      this.translationCache[cacheKey] = translated;
+      return translated;
+
+    } catch (error) {
+      // Guardar en caché para no reintentar
+      this.translationCache[cacheKey] = text;
+      return text;
+    }
+  }
+
+  // Obtener lista de Pokémon
+  async getPokemonList(limit = 100, offset = 0) {
+    try {
+      const pokemonDetails = [];
+
+      // Calcular el rango de IDs a cargar
+      const startId = offset + 1;
+      const endId = Math.min(offset + limit, 1025); // Máximo 1025 Pokémon
+
+      // Cargar cada Pokémon por su ID directamente
+      const promises = [];
+      for (let id = startId; id <= endId; id++) {
+        promises.push(
+          this.getPokemonDetails(`${BASE_URL}/pokemon/${id}`)
+            .catch(error => {
+              console.error(`Error loading Pokemon ${id}:`, error);
+              return null;
+            })
+        );
+      }
+
+      const results = await Promise.all(promises);
+
+      // Filtrar nulls
+      return results.filter(p => p !== null);
+    } catch (error) {
+      console.error('Error fetching Pokemon list:', error);
+      return [];
+    }
+  }
+
+  // Obtener detalles de un Pokémon específico
+  async getPokemonDetails(url, loadAllForms = false) {
+    try {
+      const response = await fetch(url);
+      const pokemon = await response.json();
+
+      // Obtener especies para nombre en español
+      const speciesResponse = await fetch(pokemon.species.url);
+      const speciesData = await speciesResponse.json();
+
+      // Obtener todas las formas/variantes si se solicita
+      let varieties = [];
+      if (loadAllForms && speciesData.varieties && speciesData.varieties.length > 1) {
+        const varietiesData = await Promise.all(
+          speciesData.varieties.map(async (variety) => {
+            try {
+              const varietyResponse = await fetch(variety.pokemon.url);
+              const varietyData = await varietyResponse.json();
+
+              const formName = variety.pokemon.name.toLowerCase();
+
+              // Detectar tipo de forma
+              let formType = 'other';
+              let displayName = '';
+
+              if (formName.includes('-alola')) {
+                formType = 'alola';
+                displayName = 'Alola';
+              } else if (formName.includes('-galar')) {
+                formType = 'galar';
+                displayName = 'Galar';
+              } else if (formName.includes('-hisui')) {
+                formType = 'hisui';
+                displayName = 'Hisui';
+              } else if (formName.includes('-paldea')) {
+                formType = 'paldea';
+                displayName = 'Paldea';
+              } else if (variety.is_default) {
+                formType = 'normal';
+                displayName = 'Normal';
+              } else if (formName.includes('-mega')) {
+                formType = 'mega';
+                displayName = formName.includes('-mega-x') ? 'Mega X' :
+                  formName.includes('-mega-y') ? 'Mega Y' : 'Mega';
+              } else if (formName.includes('-gigantamax') || formName.includes('-gmax')) {
+                formType = 'gigantamax';
+                displayName = 'Gigamax';
+              } else {
+                // Ignorar formas cosméticas (gorras, trajes, etc.)
+                return null;
+              }
+
+              // Verificar que tenga sprite
+              const sprite = varietyData.sprites.other['official-artwork']?.front_default ||
+                varietyData.sprites.front_default;
+
+              if (!sprite) {
+                return null;
+              }
+
+              return {
+                id: varietyData.id,
+                name: variety.pokemon.name,
+                formType: formType,
+                displayName: displayName,
+                isDefault: variety.is_default,
+                types: varietyData.types,
+                stats: varietyData.stats,
+                abilities: varietyData.abilities,
+                sprite: sprite,
+                height: varietyData.height,
+                weight: varietyData.weight
+              };
+            } catch (error) {
+              console.error(`Error loading variety ${variety.pokemon.name}:`, error);
+              return null;
+            }
+          })
+        );
+
+        // Filtrar nulls (formas cosméticas o sin sprite)
+        varieties = varietiesData.filter(v => v !== null);
+
+        // Si solo quedó la forma normal, no mostrar selector
+        if (varieties.length <= 1) {
+          varieties = [];
+        }
+      }
+
+      // Buscar nombre en español
+      const spanishName = speciesData.names.find(n => n.language.name === 'es');
+      const spanishGenus = speciesData.genera.find(g => g.language.name === 'es');
+      const spanishFlavorTexts = speciesData.flavor_text_entries
+        .filter(f => f.language.name === 'es');
+
+      const spanishFlavorText = spanishFlavorTexts.length
+        ? spanishFlavorTexts[spanishFlavorTexts.length - 1]
+        : null;
+
+      // Si no hay texto en español, buscar en inglés como fallback
+      const englishGenus = speciesData.genera.find(g => g.language.name === 'en');
+      const englishFlavorText = speciesData.flavor_text_entries.find(
+        f => f.language.name === 'en'
+      );
+
+      // Traducir genus si no está en español - GUARDAR EN INGLÉS, TRADUCIR AL ABRIR
+      let finalGenus = '';
+      if (spanishGenus) {
+        finalGenus = this.cleanText(spanishGenus.genus);
+      } else if (englishGenus) {
+        const cleanedGenus = this.cleanText(englishGenus.genus);
+
+        if (GENUS_FALLBACK_ES[cleanedGenus]) {
+          finalGenus = GENUS_FALLBACK_ES[cleanedGenus];
+        } else {
+          const dictResult = this.translateToSpanish(cleanedGenus);
+          finalGenus = dictResult;
+        }
+      } else {
+        finalGenus = 'Pokémon Desconocido';
+      }
+
+      // Descripción - GUARDAR EN INGLÉS, TRADUCIR AL ABRIR
+      let finalDescription = '';
+      if (spanishFlavorText) {
+        finalDescription = this.cleanText(spanishFlavorText.flavor_text);
+      } else if (englishFlavorText) {
+        finalDescription = this.cleanText(englishFlavorText.flavor_text);
+      } else {
+        finalDescription = 'Sin descripción disponible';
+      }
+
+      // Obtener cadena de evolución
+      let evolutionChain = [];
+      if (speciesData.evolution_chain) {
+        evolutionChain = await this.getEvolutionChain(speciesData.evolution_chain.url);
+      }
+
+      // Obtener habilidades en español CON DESCRIPCIONES
+      const abilitiesPromises = pokemon.abilities.map(async (a) => {
+        const abilityResponse = await fetch(a.ability.url);
+        const abilityData = await abilityResponse.json();
+        const spanishAbility = abilityData.names.find(n => n.language.name === 'es');
+
+        const spanishEffect = abilityData.effect_entries.find(e => e.language.name === 'es');
+        const englishEffect = abilityData.effect_entries.find(e => e.language.name === 'en');
+
+        let description = '';
+        if (spanishEffect) {
+          description = spanishEffect.short_effect || spanishEffect.effect;
+        } else if (englishEffect) {
+          description = englishEffect.short_effect || englishEffect.effect;
+        }
+
+        return {
+          name: spanishAbility ? this.cleanText(spanishAbility.name) : a.ability.name,
+          isHidden: a.is_hidden,
+          description: this.cleanText(description),
+          needsTranslation: !spanishEffect
+        };
+      });
+
+      let abilities = await Promise.all(abilitiesPromises);
+
+      // Filtrar duplicados y corregir habilidades ocultas
+      if (abilities && abilities.length > 0) {
+        const abilityMap = new Map();
+
+        abilities.forEach(ability => {
+          const existing = abilityMap.get(ability.name);
+
+          if (!existing) {
+            abilityMap.set(ability.name, ability);
+          } else if (abilities.length === 1) {
+            abilityMap.set(ability.name, { ...ability, isHidden: false });
+          } else {
+            if (!existing.isHidden) {
+              abilityMap.set(ability.name, existing);
+            }
+          }
+        });
+
+        abilities = Array.from(abilityMap.values());
+      } else {
+        abilities = [];
+      }
+
+      // Calcular debilidades basadas en los tipos del Pokémon
+      const calculateWeaknesses = (types) => {
+        const typeEffectiveness = {
+          normal: { fighting: 2 },
+          fighting: { flying: 2, psychic: 2, fairy: 2 },
+          flying: { rock: 2, electric: 2, ice: 2 },
+          poison: { ground: 2, psychic: 2 },
+          ground: { water: 2, grass: 2, ice: 2 },
+          rock: { fighting: 2, ground: 2, steel: 2, water: 2, grass: 2 },
+          bug: { flying: 2, rock: 2, fire: 2 },
+          ghost: { ghost: 2, dark: 2 },
+          steel: { fighting: 2, ground: 2, fire: 2 },
+          fire: { ground: 2, rock: 2, water: 2 },
+          water: { grass: 2, electric: 2 },
+          grass: { flying: 2, poison: 2, bug: 2, fire: 2, ice: 2 },
+          electric: { ground: 2 },
+          psychic: { bug: 2, ghost: 2, dark: 2 },
+          ice: { fighting: 2, rock: 2, steel: 2, fire: 2 },
+          dragon: { ice: 2, dragon: 2, fairy: 2 },
+          dark: { fighting: 2, bug: 2, fairy: 2 },
+          fairy: { poison: 2, steel: 2 }
+        };
+
+        const weaknessMap = {};
+
+        types.forEach(type => {
+          const typeKey = type.nameEn;
+          const weaknesses = typeEffectiveness[typeKey] || {};
+
+          Object.keys(weaknesses).forEach(weakType => {
+            if (!weaknessMap[weakType]) {
+              weaknessMap[weakType] = 1;
+            }
+            weaknessMap[weakType] *= weaknesses[weakType];
+          });
+        });
+
+        const weaknesses = Object.keys(weaknessMap)
+          .filter(type => weaknessMap[type] > 1)
+          .map(type => ({
+            name: TYPE_TRANSLATIONS[type] || type,
+            nameEn: type,
+            color: TYPE_COLORS[type] || '#777',
+            multiplier: weaknessMap[type]
+          }));
+
+        return weaknesses;
+      };
+
+      const weaknesses = calculateWeaknesses(pokemon.types.map(t => ({
+        nameEn: t.type.name
+      })));
+
+      const colorTranslations = {
+        black: 'Negro', blue: 'Azul', brown: 'Marrón', gray: 'Gris',
+        green: 'Verde', pink: 'Rosa', purple: 'Púrpura', red: 'Rojo',
+        white: 'Blanco', yellow: 'Amarillo'
+      };
+
+      const genderRate = speciesData.gender_rate;
+      let gender = 'Sin género';
+      if (genderRate === -1) {
+        gender = 'Sin género';
+      } else {
+        const femalePercent = (genderRate / 8) * 100;
+        const malePercent = 100 - femalePercent;
+        gender = `♂ ${malePercent}% / ♀ ${femalePercent}%`;
+      }
+
+      const eggGroupsPromises = speciesData.egg_groups.map(async (eg) => {
+        const egResponse = await fetch(eg.url);
+        const egData = await egResponse.json();
+        const spanishEG = egData.names.find(n => n.language.name === 'es');
+        return spanishEG ? spanishEG.name : eg.name;
+      });
+      const eggGroups = await Promise.all(eggGroupsPromises);
+
+      const genNumber = speciesData.generation.url.split('/').filter(Boolean).pop();
+      const generationNames = {
+        '1': 'Primera', '2': 'Segunda', '3': 'Tercera', '4': 'Cuarta',
+        '5': 'Quinta', '6': 'Sexta', '7': 'Séptima', '8': 'Octava', '9': 'Novena'
+      };
+
+      return {
+        id: pokemon.id,
+        name: spanishName ? spanishName.name : pokemon.name,
+        nameEn: pokemon.name,
+        genus: finalGenus,
+        description: finalDescription,
+        types: pokemon.types.map(t => ({
+          name: TYPE_TRANSLATIONS[t.type.name] || t.type.name,
+          nameEn: t.type.name,
+          color: TYPE_COLORS[t.type.name] || '#777'
+        })),
+        sprite: pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default,
+        height: pokemon.height / 10,
+        weight: pokemon.weight / 10,
+        stats: pokemon.stats.map(s => ({
+          name: this.translateStat(s.stat.name),
+          value: s.base_stat
+        })),
+        abilities: abilities,
+        weaknesses: weaknesses,
+        evolutionChain: evolutionChain,
+        varieties: varieties,
+        captureRate: speciesData.capture_rate,
+        baseHappiness: speciesData.base_happiness,
+        growthRate: this.translateGrowthRate(speciesData.growth_rate.name),
+        eggGroups: eggGroups,
+        gender: gender,
+        hatchCounter: speciesData.hatch_counter,
+        color: colorTranslations[speciesData.color.name] || speciesData.color.name,
+        generation: generationNames[genNumber] || `Gen ${genNumber}`,
+        isLegendary: speciesData.is_legendary,
+        isMythical: speciesData.is_mythical
+      };
+    } catch (error) {
+      console.error('Error fetching Pokemon details:', error);
+      return null;
+    }
+  }
+
+  // Traducir growth rate
+  translateGrowthRate(growthRate) {
+    const translations = {
+      'slow': 'Lento (1.250.000)',
+      'medium': 'Medio (1.000.000)',
+      'fast': 'Rápido (800.000)',
+      'medium-slow': 'Medio-Lento (1.059.860)',
+      'slow-then-very-fast': 'Lento-Rápido (600.000)',
+      'fast-then-very-slow': 'Rápido-Lento (1.640.000)'
+    };
+    return translations[growthRate] || growthRate;
+  }
+
+  // Obtener cadena de evolución
+  async getEvolutionChain(url) {
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const chain = [];
+      let current = data.chain;
+
+      while (current) {
+        const id = current.species.url.split('/').filter(Boolean).pop();
+        chain.push({
+          id: parseInt(id),
+          name: current.species.name
+        });
+        current = current.evolves_to[0];
+      }
+
+      return chain;
+    } catch (error) {
+      console.error('Error fetching evolution chain:', error);
+      return [];
+    }
+  }
+
+  // Traducir nombres de estadísticas
+  translateStat(statName) {
+    const translations = {
+      hp: 'PS',
+      attack: 'Ataque',
+      defense: 'Defensa',
+      'special-attack': 'At. Esp.',
+      'special-defense': 'Def. Esp.',
+      speed: 'Velocidad'
+    };
+    return translations[statName] || statName;
+  }
+
+  // Buscar Pokémon por nombre o ID
+  async searchPokemon(query) {
+    try {
+      const url = `${BASE_URL}/pokemon/${query.toLowerCase()}`;
+      return await this.getPokemonDetails(url);
+    } catch (error) {
+      console.error('Error searching Pokemon:', error);
+      return null;
+    }
+  }
+}
+
+export default new PokeAPI();

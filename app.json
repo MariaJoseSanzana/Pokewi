@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "PokéWi",
+    "slug": "pokeWi",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pokemoncollection.app"
+    },
+    "android": {
+      "package": "com.pokemoncollection.app",
+      "permissions": [],
+      "adaptiveIcon": {
+        "backgroundColor": "#e74c3c"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "sdkVersion": "54.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "c62fe9e3-70a1-4a72-b266-e524ee781270"
+      }
+    }
+  }
+}
