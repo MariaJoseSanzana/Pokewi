@@ -6,11 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#e74c3c"
-    },
     "newArchEnabled": true,
     "assetBundlePatterns": [
       "**/*"
@@ -32,6 +27,11 @@
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
-    "sdkVersion": "54.0.0"
+    "sdkVersion": "54.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "c62fe9e3-70a1-4a72-b266-e524ee781270"
+      }
+    }
   }
 }
