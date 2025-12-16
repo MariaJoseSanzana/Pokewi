@@ -4,7 +4,13 @@
     "slug": "pokeWi",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#e74c3c"
+    },
     "newArchEnabled": true,
     "assetBundlePatterns": [
       "**/*"
@@ -15,19 +21,17 @@
     },
     "android": {
       "package": "com.pokemoncollection.app",
+      "versionCode": 1,
       "permissions": [],
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#e74c3c"
       }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     },
-    "sdkVersion": "54.0.0",
-    "extra": {
-      "eas": {
-        "projectId": "c62fe9e3-70a1-4a72-b266-e524ee781270"
-      }
-    }
+    "sdkVersion": "54.0.0"
   }
 }
