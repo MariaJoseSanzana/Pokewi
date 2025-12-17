@@ -71,6 +71,74 @@ const FORM_DESCRIPTIONS = {
   'tauros-paldea-aqua-breed': {
     es: 'Esta raza de Tauros de Paldea es de tipo Lucha/Agua. Su cuerpo musculoso está adaptado para nadar velozmente.',
     en: 'This Paldean breed of Tauros is Fighting/Water type. Its muscular body is adapted for swift swimming.'
+  },
+  'raticate-totem-alola': {
+    es: 'Forma Totem de Raticate Alola. Es una versión más grande y poderosa que actúa como guardián territorial. Tiene el mismo tipo Siniestro/Normal pero un tamaño imponente.',
+    en: 'Totem form of Alolan Raticate. A larger, more powerful version that acts as a territorial guardian. Same Dark/Normal type but imposing size.'
+  },
+  'darmanitan-galar-standard': {
+    es: 'Forma estándar de Darmanitan de Galar, de tipo Hielo. Vivía en regiones nevadas donde desarrolló órganos que producen energía helada. Su bola de nieve en la cabeza contiene un cerebro congelado.',
+    en: 'Standard Galarian Darmanitan form, Ice type. It lived in snowy regions where it developed organs that produce freezing energy. The snowball on its head contains a frozen brain.'
+  },
+  'darmanitan-galar-zen': {
+    es: 'Forma Zen de Darmanitan de Galar, de tipo Hielo/Fuego. Cuando entra en este estado, sus órganos de hielo y fuego trabajan al máximo. La combinación de elementos lo vuelve impredecible.',
+    en: 'Zen Mode Galarian Darmanitan, Ice/Fire type. When entering this state, its ice and fire organs work at maximum. The combination of elements makes it unpredictable.'
+  },
+  'meowth-alola': {
+    es: 'Antaño disfrutó de los lujos de la familia real de Alola, por lo que tiene un paladar muy refinado y no come cualquier cosa.',
+    en: 'It once enjoyed the luxuries of Alola\'s royal family, so it has a very refined palate and doesn\'t eat just anything.'
+  },
+  'meowth-galar': {
+    es: 'Algunas partes de su cuerpo se volvieron metálicas tras una larga convivencia con aguerrida gente del mar.',
+    en: 'Some parts of its body became metallic after a long coexistence with fierce seafaring people.'
+  },
+  'meowth-gmax': {
+    es: 'Se cree que el grabado de la gran moneda que ornamenta su frente contiene la clave para descifrar el secreto del fenómeno Dinamax.',
+    en: 'It is believed that the engraving on the large coin adorning its forehead contains the key to deciphering the secret of the Dynamax phenomenon.'
+  },
+  'pikachu-gmax': {
+    es: 'La energía del fenómeno Gigamax ha hecho que su cuerpo se expanda y que su cola pueda estirarse hasta alcanzar el cielo.',
+    en: 'Gigamax energy has caused its body to expand and its tail can stretch to reach the sky.'
+  },
+  'machamp-gmax': {
+    es: 'La energía del fenómeno Gigamax se concentra en sus brazos y le otorga una fuerza destructiva comparable a la de una bomba.',
+    en: 'Gigamax energy concentrates in its arms and grants it destructive force comparable to a bomb.'
+  },
+  'gengar-gmax': {
+    es: 'Exuda energía negativa. Se dice que su colosal boca es un portal que conduce al otro mundo.',
+    en: 'It exudes negative energy. Its colossal mouth is said to be a portal leading to the other world.'
+  },
+  'kingler-gmax': {
+    es: 'Puede pulverizar cualquier cosa con su pinza izquierda, que ha adoptado dimensiones descomunales gracias al fenómeno Gigamax.',
+    en: 'It can pulverize anything with its left claw, which has adopted colossal dimensions thanks to the Gigamax phenomenon.'
+  },
+  'eevee-gmax': {
+    es: 'Envuelve y atrapa a sus enemigos con el pelaje de su cuello que, gracias al fenómeno Gigamax, es ahora mucho más denso y esponjoso.',
+    en: 'It wraps and traps its enemies with the fur on its neck which, thanks to Gigamax, is now much denser and fluffier.'
+  },
+  'slowbro-mega': {
+    es: 'Toda la energía derivada de la megaevolución ha recaído sobre el Shellder que porta en su cola, que ha engullido casi del todo al propio Slowpoke.',
+    en: 'All the energy derived from mega evolution has fallen on the Shellder on its tail, which has almost completely engulfed Slowpoke itself.'
+  },
+  'gengar-mega': {
+    es: 'Puede pasar de una dimensión a otra y aparecer donde quiera. Una vez causó gran revuelo al mostrar tan solo una pata a través de una pared.',
+    en: 'It can pass from one dimension to another and appear wherever it wants. It once caused great commotion by showing just a paw through a wall.'
+  },
+  'kangaskhan-mega': {
+    es: 'La energía de la megaevolución hace crecer de golpe a la cría, que coordina a la perfección sus movimientos con los de su madre.',
+    en: 'Mega evolution energy makes the baby grow suddenly, coordinating its movements perfectly with its mother.'
+  },
+  'pinsir-mega': {
+    es: 'Se enorgullece de sus cuernos, con los que puede levantar a un oponente de hasta diez veces su peso y llevarlo volando sin esfuerzo.',
+    en: 'It takes pride in its horns, with which it can lift an opponent up to ten times its weight and carry it flying effortlessly.'
+  },
+  'mewtwo-mega-x': {
+    es: 'Su poder psíquico ha incrementado su masa muscular. Posee una fuerza de agarre de una tonelada y puede correr 100 m en dos segundos.',
+    en: 'Its psychic power has increased its muscle mass. It has a grip strength of one ton and can run 100m in two seconds.'
+  },
+  'mewtwo-mega-y': {
+    es: 'Aunque su cuerpo se ha encogido, el poder tan extraordinario que atesora le permite reducir a escombros un rascacielos con solo pensarlo.',
+    en: 'Although its body has shrunk, the extraordinary power it holds allows it to reduce a skyscraper to rubble just by thinking about it.'
   }
 };
 
@@ -349,6 +417,9 @@ class PokeAPI {
                 formType = 'mega';
                 displayName = formName.includes('-mega-x') ? 'Mega X' :
                   formName.includes('-mega-y') ? 'Mega Y' : 'Mega';
+              } else if (formName.includes('-primal')) {
+                formType = 'primal';
+                displayName = 'Primigenio';
               } else if (formName.includes('-gigantamax') || formName.includes('-gmax')) {
                 formType = 'gigantamax';
                 displayName = 'Gigamax';
@@ -369,15 +440,16 @@ class PokeAPI {
               let formDescription = '';
               let formGenus = '';
 
-              // Para formas regionales, buscar sus flavor texts más recientes
-              if (formType === 'alola' || formType === 'galar' || formType === 'hisui' || formType === 'paldea') {
+              // Para formas regionales y especiales, buscar sus flavor texts
+              if (formType === 'alola' || formType === 'galar' || formType === 'hisui' || formType === 'paldea' || formType === 'mega' || formType === 'gigantamax' || formType === 'primal') {
+
                 //Verificar si tenemos descripción manual
                 if (FORM_DESCRIPTIONS[formName]) {
                   formDescription = FORM_DESCRIPTIONS[formName].es || FORM_DESCRIPTIONS[formName].en;
                 } else {
                   // Si no hay manual, intentar cargar de la API
                   try {
-                    const formSpeciesResponse = await fetch(targetSpeciesUrl);
+                    const formSpeciesResponse = await fetch(varietyData.species.url);
                     const formSpeciesData = await formSpeciesResponse.json();
 
                     // Mapeo de formas a versiones de juegos donde aparecen
@@ -385,7 +457,10 @@ class PokeAPI {
                       'alola': ['ultra-sun', 'ultra-moon', 'sun', 'moon'],
                       'galar': ['sword', 'shield'],
                       'hisui': ['legends-arceus'],
-                      'paldea': ['scarlet', 'violet']
+                      'paldea': ['scarlet', 'violet'],
+                      'mega': ['omega-ruby', 'alpha-sapphire', 'x', 'y'],
+                      'gigantamax': ['sword', 'shield'],
+                      'primal': ['omega-ruby', 'alpha-sapphire']
                     };
 
                     const relevantVersions = formGameVersions[formType] || [];
@@ -446,9 +521,12 @@ class PokeAPI {
                         'alola': 'Alola',
                         'galar': 'Galar',
                         'hisui': 'Hisui',
-                        'paldea': 'Paldea'
+                        'paldea': 'Paldea',
+                        'mega': 'Megaevolución',
+                        'gigantamax': 'Gigamax',
+                        'primal': 'Regresión Primigenia'
                       };
-                      formDescription = `Forma regional de ${regionNames[formType]}. Presenta tipos y características diferentes adaptadas a su región.`;
+                      formDescription = `Forma de ${regionNames[formType]}. Presenta características únicas y poder aumentado.`;
                     }
 
                     // Buscar genus
