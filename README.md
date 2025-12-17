@@ -305,6 +305,7 @@ Proyecto de uso personal. El código está disponible para referencia y aprendiz
 
 ---
 APK Disponible para su uso:
-https://expo.dev/artifacts/eas/evfeQA7LzsPn8p3S3Ntjv2.apk
+https://expo.dev/artifacts/eas/35TjNiM6a6QJJcxsHqXuKs.apk
+Alternativa:: https://expo.dev/accounts/mjsanzana/projects/pokeWi/builds/10e0e1cb-3071-41bf-a665-a1be12119780
 
 Desarrollado para ayudar a coleccionistas de cartas Pokémon a gestionar su colección de forma sencilla y visual.
