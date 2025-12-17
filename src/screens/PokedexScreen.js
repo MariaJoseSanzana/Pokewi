@@ -182,6 +182,44 @@ export default function PokedexScreen() {
             );
             translatedPokemon.abilities = translatedAbilities;
           }
+          //Traducir descripciones y habilidades de CADA forma regional
+          if (fullPokemon.varieties && fullPokemon.varieties.length > 0) {
+            const translatedVarieties = await Promise.all(
+              fullPokemon.varieties.map(async (variety) => {
+                let translatedVariety = { ...variety };
+
+                // Traducir descripción de esta forma
+                if (variety.description) {
+                  translatedVariety.description = await PokeAPI.translateText(variety.description, 'auto', 'es');
+                }
+
+                // Traducir genus de esta forma
+                if (variety.genus) {
+                  translatedVariety.genus = await PokeAPI.translateText(variety.genus, 'auto', 'es');
+                }
+
+                // Traducir habilidades de esta forma
+                if (variety.abilities && variety.abilities.length > 0) {
+                  const translatedFormAbilities = await Promise.all(
+                    variety.abilities.map(async (ability) => {
+                      if (ability.needsTranslation && ability.description) {
+                        const translatedDesc = await PokeAPI.translateText(ability.description, 'auto', 'es');
+                        return {
+                          ...ability,
+                          description: translatedDesc
+                        };
+                      }
+                      return ability;
+                    })
+                  );
+                  translatedVariety.abilities = translatedFormAbilities;
+                }
+
+                return translatedVariety;
+              })
+            );
+            translatedPokemon.varieties = translatedVarieties;
+          }
 
           setSelectedPokemon(translatedPokemon);
         }}

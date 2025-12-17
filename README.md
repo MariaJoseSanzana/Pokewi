@@ -101,19 +101,35 @@ npx expo start
 
 Al abrir un Pokémon verás:
 - Nombre en español y número de Pokédex
-- **Selector de formas regionales** (si tiene variantes Alola, Galar, Hisui o Paldea)
-- Clasificación de especie (ej: "Pokémon Ratón")
-- Imagen oficial de alta calidad que cambia según la forma seleccionada
-- Tipos elementales con sus colores (diferentes para cada forma)
-- Descripción traducida de la Pokédex
-- Altura y peso (varían según la forma)
-- Estadísticas base (PS, Ataque, Defensa, etc.) con barras de progreso
-- Cadena evolutiva (si aplica)
-- Habilidades con descripción completa de su efecto
-- Debilidades de tipo con multiplicadores (recalculadas para cada forma)
+- **Selector de formas regionales** (si tiene variantes disponibles)
+  - Botones horizontales para cambiar entre Normal, Alola, Galar, Hisui, Paldea, Mega, Gigamax
+  - Indicador visual de la forma actualmente seleccionada
+- Clasificación de especie adaptada a la forma (cuando aplica)
+- Imagen oficial de alta calidad que **cambia automáticamente** según la forma seleccionada
+- Tipos elementales con sus colores (**diferentes para cada forma regional**)
+- Descripción traducida de la Pokédex (**específica de cada forma cuando está disponible**)
+- Altura y peso (varían en formas Gigamax y algunas regionales)
+- Estadísticas base con barras de progreso (**actualizadas para formas Mega**)
+- Cadena evolutiva completa
+- Habilidades con descripción completa (**específicas de cada forma**)
+- Debilidades de tipo con multiplicadores (**recalculadas automáticamente según tipos de la forma**)
 - Información de especie (color, generación, ratio de captura)
 - Datos de crianza (grupos huevo, género, pasos para eclosión, experiencia necesaria)
 - Control de cantidad en tu colección
+
+**Formas disponibles por región:**
+- **Alola** (Generación 7): Adaptaciones a clima tropical - Ejemplos: Vulpix nieve, Raichu surf
+- **Galar** (Generación 8): Variantes británicas - Ejemplos: Ponyta psíquico, Meowth acero
+- **Hisui** (Leyendas Arceus): Formas antiguas - Ejemplos: Voltorb madera/eléctrico
+- **Paldea** (Generación 9): Variantes ibéricas - Ejemplos: Wooper veneno, Tauros 3 razas
+- **Mega** (Gen 6-7): Megaevoluciones temporales con stats mejoradas
+- **Gigamax** (Gen 8): Formas gigantes con apariencia única (stats iguales a la base)
+
+**Comportamiento del selector:**
+- Solo aparece si el Pokémon tiene formas con cambios significativos
+- Las formas cosméticas (Pikachu con gorras, Vivillon patrones) se filtran automáticamente
+- Al cambiar de forma, todos los datos relevantes se actualizan en tiempo real
+- El sprite, tipos, stats, habilidades y debilidades reflejan la forma seleccionada
 
 **Formas regionales disponibles:**
 - **Alola**: Variantes de la región de Alola (Gen 7) - ejemplo: Raichu Alola (Eléctrico/Psíquico)
@@ -151,6 +167,36 @@ La colección se guarda usando AsyncStorage, lo que significa:
 - No necesitas cuenta ni login
 - La información se guarda solo en tu dispositivo
 - Formato: `{ pokemonId: cantidad }`
+
+### Formas regionales y variantes
+
+La aplicación detecta y muestra automáticamente las formas regionales de los Pokémon:
+
+**Características del sistema de formas:**
+- **Detección inteligente**: Solo muestra formas con cambios significativos (tipos, estadísticas, sprites)
+- **Filtrado automático**: Las formas cosméticas sin impacto en combate se ocultan
+- **Datos dinámicos**: Al cambiar de forma se actualizan:
+  - Tipos elementales y colores
+  - Estadísticas base (para Mega/formas especiales)
+  - Habilidades específicas de la forma
+  - Debilidades (recalculadas según nuevos tipos)
+  - Sprite oficial
+  - Altura y peso
+  - Descripción de Pokédex (cuando está disponible)
+
+**Ejemplos de Pokémon con formas regionales:**
+- **Raichu**: Normal (Eléctrico) / Alola (Eléctrico/Psíquico) - Habilidad exclusiva "Cola Surf"
+- **Vulpix**: Normal (Fuego) / Alola (Hielo) - Adaptación a montañas nevadas
+- **Exeggutor**: Normal (Planta/Psíquico) / Alola (Planta/Dragón) - Versión de cuello largo
+- **Meowth**: Normal (Normal) / Alola (Siniestro) / Galar (Acero) - Tres formas distintas
+- **Wooper**: Normal (Agua/Tierra) / Paldea (Veneno/Tierra) - Forma venenosa antigua
+- **Tauros Paldea**: Tres razas diferentes (Combate, Fuego, Agua) con tipos únicos
+
+**Notas técnicas:**
+- Las formas regionales se cargan bajo demanda al abrir el Pokémon para optimizar rendimiento
+- Formas Gigamax comparten estadísticas con la forma base (solo cambian en combate)
+- Algunas formas sin descripción oficial en PokeAPI usan descripciones manuales creadas
+- Las formas Mega y Gigamax mantienen la descripción de la forma base
 
 ## Personalización
 

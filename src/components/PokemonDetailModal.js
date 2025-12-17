@@ -27,7 +27,9 @@ export default function PokemonDetailModal({ pokemon, visible, onClose, collecti
         height: pokemon.height,
         weight: pokemon.weight,
         weaknesses: pokemon.weaknesses,
-        formName: 'Normal'
+        formName: 'Normal',
+        description: pokemon.description,
+        genus: pokemon.genus
       };
     }
 
@@ -116,12 +118,14 @@ export default function PokemonDetailModal({ pokemon, visible, onClose, collecti
         name: translateStat(s.stat.name),
         value: s.base_stat
       })),
-      abilities: pokemon.abilities,
+      abilities: variety.abilities,
       sprite: variety.sprite,
       height: variety.height / 10,
       weight: variety.weight / 10,
       weaknesses: varietyWeaknesses,
-      formName: variety.displayName
+      formName: variety.displayName,
+      description: variety.description || pokemon.description,
+      genus: variety.genus || pokemon.genus
     };
   };
 
@@ -157,7 +161,7 @@ export default function PokemonDetailModal({ pokemon, visible, onClose, collecti
             <View style={styles.headerInfo}>
               <Text style={styles.headerNumber}>#{pokemon.id.toString().padStart(3, '0')}</Text>
               <Text style={styles.headerName}>{pokemon.name}</Text>
-              <Text style={styles.headerGenus}>{pokemon.genus}</Text>
+              <Text style={styles.headerGenus}>{currentForm.genus}</Text>
               {hasVarieties && (
                 <Text style={styles.headerForm}>Forma: {currentForm.formName}</Text>
               )}
@@ -213,10 +217,10 @@ export default function PokemonDetailModal({ pokemon, visible, onClose, collecti
             </View>
 
             {/* Descripción */}
-            {pokemon.description && (
+            {currentForm.description && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Descripción</Text>
-                <Text style={styles.description}>{pokemon.description}</Text>
+                <Text style={styles.description}>{currentForm.description}</Text>
               </View>
             )}
 
@@ -335,7 +339,7 @@ export default function PokemonDetailModal({ pokemon, visible, onClose, collecti
               <View style={styles.dataGrid}>
                 <View style={styles.dataItem}>
                   <Text style={styles.dataLabel}>Especie</Text>
-                  <Text style={styles.dataValue}>{pokemon.genus}</Text>
+                  <Text style={styles.dataValue}>{currentForm.genus}</Text>
                 </View>
                 <View style={styles.dataItem}>
                   <Text style={styles.dataLabel}>Color</Text>

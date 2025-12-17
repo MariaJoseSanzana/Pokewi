@@ -55,6 +55,25 @@ const GENUS_FALLBACK_ES = {
   'Mythical Pokémon': 'Pokémon Mítico',
 };
 
+const FORM_DESCRIPTIONS = {
+  'wooper-paldea': {
+    es: 'Vive en aguas antiguas. Su cuerpo venenoso de color marrón le protege de los depredadores. A diferencia del Wooper común, esta forma habita en tierra más tiempo.',
+    en: 'It lives in ancient waters. Its poisonous brown body protects it from predators. Unlike common Wooper, this form spends more time on land.'
+  },
+  'tauros-paldea-combat-breed': {
+    es: 'Esta raza de Tauros de Paldea es de tipo Lucha. Destaca por su musculatura robusta y naturaleza agresiva en combate.',
+    en: 'This Paldean breed of Tauros is Fighting type. It stands out for its robust musculature and aggressive nature in combat.'
+  },
+  'tauros-paldea-blaze-breed': {
+    es: 'Esta raza de Tauros de Paldea es de tipo Lucha/Fuego. Sus cuernos emiten calor intenso cuando se enfurece en batalla.',
+    en: 'This Paldean breed of Tauros is Fighting/Fire type. Its horns emit intense heat when enraged in battle.'
+  },
+  'tauros-paldea-aqua-breed': {
+    es: 'Esta raza de Tauros de Paldea es de tipo Lucha/Agua. Su cuerpo musculoso está adaptado para nadar velozmente.',
+    en: 'This Paldean breed of Tauros is Fighting/Water type. Its muscular body is adapted for swift swimming.'
+  }
+};
+
 class PokeAPI {
   constructor() {
     this.translationCache = {};
@@ -334,7 +353,7 @@ class PokeAPI {
                 formType = 'gigantamax';
                 displayName = 'Gigamax';
               } else {
-                // Ignorar formas cosméticas (gorras, trajes, etc.)
+                // Ignorar formas cosméticas
                 return null;
               }
 
@@ -346,6 +365,151 @@ class PokeAPI {
                 return null;
               }
 
+              //Obtener descripción específica de esta forma
+              let formDescription = '';
+              let formGenus = '';
+
+              // Para formas regionales, buscar sus flavor texts más recientes
+              if (formType === 'alola' || formType === 'galar' || formType === 'hisui' || formType === 'paldea') {
+                //Verificar si tenemos descripción manual
+                if (FORM_DESCRIPTIONS[formName]) {
+                  formDescription = FORM_DESCRIPTIONS[formName].es || FORM_DESCRIPTIONS[formName].en;
+                } else {
+                  // Si no hay manual, intentar cargar de la API
+                  try {
+                    const formSpeciesResponse = await fetch(targetSpeciesUrl);
+                    const formSpeciesData = await formSpeciesResponse.json();
+
+                    // Mapeo de formas a versiones de juegos donde aparecen
+                    const formGameVersions = {
+                      'alola': ['ultra-sun', 'ultra-moon', 'sun', 'moon'],
+                      'galar': ['sword', 'shield'],
+                      'hisui': ['legends-arceus'],
+                      'paldea': ['scarlet', 'violet']
+                    };
+
+                    const relevantVersions = formGameVersions[formType] || [];
+
+                    // Buscar flavor text en español de las versiones correctas
+                    let spanishFormFlavor = null;
+                    let englishFormFlavor = null;
+
+                    // Primero intentar español en versiones específicas
+                    for (const version of relevantVersions) {
+                      const found = formSpeciesData.flavor_text_entries.find(entry =>
+                        entry.language.name === 'es' && entry.version.name === version
+                      );
+                      if (found) {
+                        spanishFormFlavor = found;
+                        break;
+                      }
+                    }
+
+                    // Si no hay español, buscar inglés en versiones específicas
+                    if (!spanishFormFlavor) {
+                      for (const version of relevantVersions) {
+                        const found = formSpeciesData.flavor_text_entries.find(entry =>
+                          entry.language.name === 'en' && entry.version.name === version
+                        );
+                        if (found) {
+                          englishFormFlavor = found;
+                          break;
+                        }
+                      }
+                    }
+
+                    // Si no encontramos descripción específica de versión, tomar cualquiera en español
+                    if (!spanishFormFlavor && !englishFormFlavor) {
+                      const spanishEntries = formSpeciesData.flavor_text_entries
+                        .filter(f => f.language.name === 'es');
+
+                      if (spanishEntries.length > 0) {
+                        spanishFormFlavor = spanishEntries[spanishEntries.length - 1];
+                      }
+
+                      if (!spanishFormFlavor) {
+                        const englishEntries = formSpeciesData.flavor_text_entries
+                          .filter(f => f.language.name === 'en');
+                        if (englishEntries.length > 0) {
+                          englishFormFlavor = englishEntries[englishEntries.length - 1];
+                        }
+                      }
+                    }
+
+                    if (spanishFormFlavor) {
+                      formDescription = this.cleanText(spanishFormFlavor.flavor_text);
+                    } else if (englishFormFlavor) {
+                      formDescription = this.cleanText(englishFormFlavor.flavor_text);
+                    } else {
+                      // Descripción genérica
+                      const regionNames = {
+                        'alola': 'Alola',
+                        'galar': 'Galar',
+                        'hisui': 'Hisui',
+                        'paldea': 'Paldea'
+                      };
+                      formDescription = `Forma regional de ${regionNames[formType]}. Presenta tipos y características diferentes adaptadas a su región.`;
+                    }
+
+                    // Buscar genus
+                    const spanishGenus = formSpeciesData.genera.find(g => g.language.name === 'es');
+                    const englishGenus = formSpeciesData.genera.find(g => g.language.name === 'en');
+
+                    if (spanishGenus) {
+                      formGenus = this.cleanText(spanishGenus.genus);
+                    } else if (englishGenus) {
+                      formGenus = this.cleanText(englishGenus.genus);
+                    }
+
+                  } catch (error) {
+                  }
+                }
+              }
+
+              // Obtener habilidades específicas de esta forma
+              const formAbilitiesPromises = varietyData.abilities.map(async (a) => {
+                const abilityResponse = await fetch(a.ability.url);
+                const abilityData = await abilityResponse.json();
+                const spanishAbility = abilityData.names.find(n => n.language.name === 'es');
+
+                const spanishEffect = abilityData.effect_entries.find(e => e.language.name === 'es');
+                const englishEffect = abilityData.effect_entries.find(e => e.language.name === 'en');
+
+                let description = '';
+                if (spanishEffect) {
+                  description = spanishEffect.short_effect || spanishEffect.effect;
+                } else if (englishEffect) {
+                  description = englishEffect.short_effect || englishEffect.effect;
+                }
+
+                return {
+                  name: spanishAbility ? this.cleanText(spanishAbility.name) : a.ability.name,
+                  isHidden: a.is_hidden,
+                  description: this.cleanText(description),
+                  needsTranslation: !spanishEffect
+                };
+              });
+
+              let formAbilities = await Promise.all(formAbilitiesPromises);
+
+              // Filtrar duplicados de habilidades
+              if (formAbilities && formAbilities.length > 0) {
+                const abilityMap = new Map();
+                formAbilities.forEach(ability => {
+                  const existing = abilityMap.get(ability.name);
+                  if (!existing) {
+                    abilityMap.set(ability.name, ability);
+                  } else if (formAbilities.length === 1) {
+                    abilityMap.set(ability.name, { ...ability, isHidden: false });
+                  } else {
+                    if (!existing.isHidden) {
+                      abilityMap.set(ability.name, existing);
+                    }
+                  }
+                });
+                formAbilities = Array.from(abilityMap.values());
+              }
+
               return {
                 id: varietyData.id,
                 name: variety.pokemon.name,
@@ -354,10 +518,13 @@ class PokeAPI {
                 isDefault: variety.is_default,
                 types: varietyData.types,
                 stats: varietyData.stats,
-                abilities: varietyData.abilities,
+                abilities: formAbilities,
                 sprite: sprite,
                 height: varietyData.height,
-                weight: varietyData.weight
+                weight: varietyData.weight,
+                description: formDescription,
+                genus: formGenus,
+                color: null
               };
             } catch (error) {
               console.error(`Error loading variety ${variety.pokemon.name}:`, error);
@@ -366,7 +533,7 @@ class PokeAPI {
           })
         );
 
-        // Filtrar nulls (formas cosméticas o sin sprite)
+        // Filtrar nulls
         varieties = varietiesData.filter(v => v !== null);
 
         // Si solo quedó la forma normal, no mostrar selector
@@ -374,7 +541,6 @@ class PokeAPI {
           varieties = [];
         }
       }
-
       // Buscar nombre en español
       const spanishName = speciesData.names.find(n => n.language.name === 'es');
       const spanishGenus = speciesData.genera.find(g => g.language.name === 'es');
