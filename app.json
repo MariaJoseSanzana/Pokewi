@@ -12,7 +12,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pokemoncollection.app"
+      "bundleIdentifier": "com.pokemoncollection.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.pokemoncollection.app",
@@ -38,6 +41,9 @@
     },
     "updates": {
       "url": "https://u.expo.dev/c62fe9e3-70a1-4a72-b266-e524ee781270"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
