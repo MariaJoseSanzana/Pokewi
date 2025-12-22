@@ -4,7 +4,6 @@ import { View, FlatList, StyleSheet, TextInput, TouchableOpacity, Text, Activity
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import PokeAPI from '../services/PokeAPI';
-import StorageService from '../services/StorageService';
 import PokemonDetailModal from '../components/PokemonDetailModal';
 
 export default function PokedexScreen() {
@@ -20,10 +19,8 @@ export default function PokedexScreen() {
   const [selectedType, setSelectedType] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
-  const [collection, setCollection] = useState({});
   const [refreshing, setRefreshing] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
-
 
   const types = [
     { name: 'Todos', color: '#666' },
@@ -49,7 +46,6 @@ export default function PokedexScreen() {
 
   useEffect(() => {
     loadPokemon();
-    loadCollection();
   }, []);
 
   useEffect(() => {
@@ -69,7 +65,7 @@ export default function PokedexScreen() {
       const currentOffset = isLoadingMore ? offset : 0;
       const data = await PokeAPI.getPokemonList(LIMIT, currentOffset);
 
-      // ELIMINAR DUPLICADOS DE FORMA DEFINITIVA
+      // ELIMINAR DUPLICADOS 
       const uniqueMap = new Map(
         [...pokemon, ...data].map(p => [p.id, p])
       );
@@ -100,13 +96,7 @@ export default function PokedexScreen() {
     setOffset(0);
     setHasMore(true);
     await loadPokemon(false);
-    await loadCollection();
     setRefreshing(false);
-  };
-
-  const loadCollection = async () => {
-    const col = await StorageService.getCollection();
-    setCollection(col);
   };
 
   const filterPokemon = () => {
@@ -130,13 +120,7 @@ export default function PokedexScreen() {
     setFilteredPokemon(filtered);
   };
 
-  const handleAddToCollection = async (pokemonId) => {
-    await StorageService.addPokemon(pokemonId);
-    await loadCollection();
-  };
-
   const renderPokemonCard = ({ item }) => {
-    const quantity = collection[item.id] || 0;
     const mainType = item.types[0];
 
     return (
@@ -147,7 +131,7 @@ export default function PokedexScreen() {
           // Cargar Pokémon con TODAS sus formas
           const fullPokemon = await PokeAPI.getPokemonDetails(
             `https://pokeapi.co/api/v2/pokemon/${item.id}`,
-            true // ← Cargar todas las formas
+            true
           );
 
           if (!fullPokemon) {
@@ -226,11 +210,6 @@ export default function PokedexScreen() {
       >
         <View style={styles.cardHeader}>
           <Text style={styles.pokemonId}>#{item.id.toString().padStart(3, '0')}</Text>
-          {quantity > 0 && (
-            <View style={[styles.badge, { backgroundColor: mainType.color }]}>
-              <Text style={styles.badgeText}>{quantity}</Text>
-            </View>
-          )}
         </View>
 
         <Image
@@ -252,16 +231,6 @@ export default function PokedexScreen() {
             </View>
           ))}
         </View>
-
-        <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: mainType.color }]}
-          onPress={(e) => {
-            e.stopPropagation();
-            handleAddToCollection(item.id);
-          }}
-        >
-          <Ionicons name="add" size={20} color="#fff" />
-        </TouchableOpacity>
       </TouchableOpacity>
     );
   };
@@ -365,8 +334,6 @@ export default function PokedexScreen() {
           pokemon={selectedPokemon}
           visible={!!selectedPokemon}
           onClose={() => setSelectedPokemon(null)}
-          collection={collection}
-          onUpdateCollection={loadCollection}
         />
       )}
     </View>
@@ -413,13 +380,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginBottom: 10,
   },
-
   filtersContent: {
     paddingVertical: 5,
     paddingRight: 10,
     alignItems: 'center',
   },
-
   filterChip: {
     paddingHorizontal: 18,
     paddingVertical: 8,
@@ -470,16 +435,6 @@ const styles = StyleSheet.create({
     color: '#999',
     fontWeight: 'bold',
   },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   sprite: {
     width: 100,
     height: 100,
@@ -506,17 +461,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 11,
     fontWeight: 'bold',
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-    width: 35,
-    height: 35,
-    borderRadius: 17.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3,
   },
   filtersWrapper: {
     height: 54,

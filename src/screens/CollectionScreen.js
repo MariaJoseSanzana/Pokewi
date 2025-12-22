@@ -1,115 +1,109 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Text,
-  ActivityIndicator,
-} from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, FlatList, StyleSheet, TouchableOpacity, Image, Text, ActivityIndicator, } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import PokeAPI from '../services/PokeAPI';
 import StorageService from '../services/StorageService';
-import PokemonDetailModal from '../components/PokemonDetailModal';
+import TCGdexService from '../services/TcgdexService';
 
 export default function CollectionScreen() {
   const [collection, setCollection] = useState({});
-  const [pokemonData, setPokemonData] = useState([]);
+  const [cardsData, setCardsData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPokemon, setSelectedPokemon] = useState(null);
-  const [stats, setStats] = useState({ uniquePokemon: 0, totalCards: 0 });
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [stats, setStats] = useState({ uniqueCards: 0, totalCards: 0 });
 
-  useEffect(() => {
-    loadCollection();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadCollection();
+    }, [])
+  );
 
   const loadCollection = async () => {
     setLoading(true);
     const col = await StorageService.getCollection();
     const collectionStats = await StorageService.getCollectionStats();
-    
+
     setCollection(col);
     setStats(collectionStats);
 
-    // Cargar datos de cada Pokémon en la colección
-    const pokemonIds = Object.keys(col);
-    if (pokemonIds.length > 0) {
-      const pokemonPromises = pokemonIds.map(async (id) => {
-        const pokemon = await PokeAPI.searchPokemon(id);
-        return { ...pokemon, quantity: col[id] };
+    // Cargar datos de cada carta en la colección
+    const cardIds = Object.keys(col);
+    if (cardIds.length > 0) {
+      const cardsPromises = cardIds.map(async (cardId) => {
+        const cardDetails = await TCGdexService.getCardDetails(cardId);
+        return cardDetails ? { ...cardDetails, quantity: col[cardId] } : null;
       });
-      
-      const data = await Promise.all(pokemonPromises);
-      setPokemonData(data.filter(p => p !== null));
+
+      const data = await Promise.all(cardsPromises);
+      setCardsData(data.filter(c => c !== null));
     } else {
-      setPokemonData([]);
+      setCardsData([]);
     }
-    
+
     setLoading(false);
   };
 
-  const handleRemoveFromCollection = async (pokemonId) => {
-    await StorageService.removePokemon(pokemonId);
+  const handleRemoveCard = async (cardId) => {
+    await StorageService.removeCard(cardId);
     await loadCollection();
   };
 
-  const handleAddToCollection = async (pokemonId) => {
-    await StorageService.addPokemon(pokemonId);
+  const handleAddCard = async (cardId) => {
+    await StorageService.addCard(cardId);
     await loadCollection();
   };
 
   const renderCollectionCard = ({ item }) => {
-    const mainType = item.types[0];
+    const imageUrl = TCGdexService.getCardImageUrl(item, 'high', 'webp');
 
     return (
       <TouchableOpacity
-        style={[styles.card, { borderColor: mainType.color }]}
-        onPress={() => setSelectedPokemon(item)}
+        style={styles.card}
+        onPress={() => setSelectedCard(item)}
       >
-        <View style={styles.cardHeader}>
-          <Text style={styles.pokemonId}>#{item.id.toString().padStart(3, '0')}</Text>
-          <View style={[styles.quantityBadge, { backgroundColor: mainType.color }]}>
-            <Text style={styles.quantityText}>x{item.quantity}</Text>
-          </View>
+        <View style={styles.quantityBadge}>
+          <Text style={styles.quantityText}>x{item.quantity}</Text>
         </View>
-        
-        <Image source={{ uri: item.sprite }} style={styles.sprite} />
-        
-        <Text style={styles.pokemonName}>{item.name}</Text>
-        
-        <View style={styles.typesContainer}>
-          {item.types.map((type, index) => (
-            <View
-              key={index}
-              style={[styles.typeChip, { backgroundColor: type.color }]}
-            >
-              <Text style={styles.typeText}>{type.name}</Text>
-            </View>
-          ))}
-        </View>
+
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.cardImage}
+          resizeMode="contain"
+        />
+
+        <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
+
+        <Text style={styles.cardSet} numberOfLines={1}>
+          {item.set?.name || 'Sin set'}
+        </Text>
+
+        {item.rarity && (
+          <Text style={styles.cardRarity} numberOfLines={1}>
+            {item.rarity}
+          </Text>
+        )}
 
         <View style={styles.controls}>
           <TouchableOpacity
-            style={[styles.controlButton, { backgroundColor: '#e74c3c' }]}
+            style={[styles.controlButton, styles.removeButton]}
             onPress={(e) => {
               e.stopPropagation();
-              handleRemoveFromCollection(item.id);
+              handleRemoveCard(item.id);
             }}
           >
-            <Ionicons name="remove" size={18} color="#fff" />
+            <Ionicons name="remove" size={16} color="#fff" />
           </TouchableOpacity>
-          
+
           <Text style={styles.controlQuantity}>{item.quantity}</Text>
-          
+
           <TouchableOpacity
-            style={[styles.controlButton, { backgroundColor: mainType.color }]}
+            style={[styles.controlButton, styles.addButton]}
             onPress={(e) => {
               e.stopPropagation();
-              handleAddToCollection(item.id);
+              handleAddCard(item.id);
             }}
           >
-            <Ionicons name="add" size={18} color="#fff" />
+            <Ionicons name="add" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -125,13 +119,13 @@ export default function CollectionScreen() {
     );
   }
 
-  if (pokemonData.length === 0) {
+  if (cardsData.length === 0) {
     return (
       <View style={styles.emptyContainer}>
         <Ionicons name="albums-outline" size={80} color="#ccc" />
         <Text style={styles.emptyTitle}>Colección vacía</Text>
         <Text style={styles.emptyText}>
-          Agrega Pokémon desde la Pokédex para comenzar tu colección
+          Agrega cartas TCG desde la Pokédex para comenzar tu colección
         </Text>
       </View>
     );
@@ -140,36 +134,81 @@ export default function CollectionScreen() {
   return (
     <View style={styles.container}>
       {/* Estadísticas */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>{stats.uniquePokemon}</Text>
-          <Text style={styles.statLabel}>Pokémon únicos</Text>
+      {!selectedCard && (
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>{stats.uniqueCards}</Text>
+            <Text style={styles.statLabel}>Cartas únicas</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>{stats.totalCards}</Text>
+            <Text style={styles.statLabel}>Cartas totales</Text>
+          </View>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>{stats.totalCards}</Text>
-          <Text style={styles.statLabel}>Cartas totales</Text>
-        </View>
-      </View>
+      )}
 
-      {/* Lista de colección */}
+
+      {/* Lista de cartas en colección */}
       <FlatList
-        data={pokemonData}
+        data={cardsData}
         renderItem={renderCollectionCard}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.listContainer}
+        scrollEnabled={!selectedCard}
       />
 
-      {/* Modal de detalles */}
-      {selectedPokemon && (
-        <PokemonDetailModal
-          pokemon={selectedPokemon}
-          visible={!!selectedPokemon}
-          onClose={() => setSelectedPokemon(null)}
-          collection={collection}
-          onUpdateCollection={loadCollection}
-        />
+      {/* Modal de detalle de carta */}
+      {selectedCard && (
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setSelectedCard(null)}
+        >
+          <View style={styles.modalContainer}>
+            <Image
+              source={{ uri: TCGdexService.getCardImageUrl(selectedCard, 'high', 'webp') }}
+              style={styles.modalImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalCardName}>{selectedCard.name}</Text>
+            <Text style={styles.modalCardSet}>{selectedCard.set?.name}</Text>
+            {selectedCard.rarity && (
+              <Text style={styles.modalCardRarity}>{selectedCard.rarity}</Text>
+            )}
+            {selectedCard.hp && (
+              <Text style={styles.modalCardHP}>HP: {selectedCard.hp}</Text>
+            )}
+
+            <View style={styles.modalControls}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.removeButton]}
+                onPress={() => {
+                  handleRemoveCard(selectedCard.id);
+                }}
+              >
+                <Ionicons name="remove" size={20} color="#fff" />
+              </TouchableOpacity>
+
+              <View style={styles.modalQuantityContainer}>
+                <Text style={styles.modalQuantityText}>
+                  {collection[selectedCard.id] || 0}
+                </Text>
+                <Text style={styles.modalQuantityLabel}>en colección</Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.addButton]}
+                onPress={() => {
+                  handleAddCard(selectedCard.id);
+                }}
+              >
+                <Ionicons name="add" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -242,81 +281,162 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    margin: 5,
+    margin: 8,
     backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 15,
+    borderRadius: 10,
+    padding: 10,
     alignItems: 'center',
     elevation: 3,
-    borderWidth: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 5,
-  },
-  pokemonId: {
-    fontSize: 12,
-    color: '#999',
-    fontWeight: 'bold',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    maxWidth: '46%',
+    position: 'relative',
   },
   quantityBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: '#e74c3c',
     borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    zIndex: 1,
   },
   quantityText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
   },
-  sprite: {
-    width: 100,
-    height: 100,
-    resizeMode: 'contain',
+  cardImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
   },
-  pokemonName: {
-    fontSize: 16,
+  cardName: {
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
-    marginTop: 5,
+    color: '#2c3e50',
+    marginTop: 8,
     textAlign: 'center',
   },
-  typesContainer: {
-    flexDirection: 'row',
-    marginTop: 8,
-    gap: 5,
-  },
-  typeChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  typeText: {
-    color: '#fff',
+  cardSet: {
     fontSize: 11,
-    fontWeight: 'bold',
+    color: '#7f8c8d',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  cardRarity: {
+    fontSize: 10,
+    color: '#e74c3c',
+    marginTop: 2,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: 10,
     gap: 10,
   },
   controlButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
   },
+  removeButton: {
+    backgroundColor: '#e74c3c',
+  },
+  addButton: {
+    backgroundColor: '#27ae60',
+  },
   controlQuantity: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#2c3e50',
     minWidth: 30,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    maxWidth: '90%',
+    maxHeight: '90%',
+  },
+  modalImage: {
+    width: 300,
+    height: 420,
+    borderRadius: 10,
+  },
+  modalCardName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginTop: 15,
+    textAlign: 'center',
+  },
+  modalCardSet: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  modalCardRarity: {
+    fontSize: 14,
+    color: '#e74c3c',
+    marginTop: 5,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  modalCardHP: {
+    fontSize: 16,
+    color: '#27ae60',
+    marginTop: 2,
+    fontWeight: 'bold',
+  },
+  modalControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -2,
+    gap: 15,
+  },
+  modalButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+  },
+  modalQuantityContainer: {
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  modalQuantityText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  modalQuantityLabel: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    marginTop: 2,
   },
 });
